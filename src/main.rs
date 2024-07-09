@@ -12,9 +12,11 @@ pub struct Args {
     /// Show n bytes per line.
     #[arg(long, short, default_value_t = 16)]
     characters: u8,
+
     /// Group bytes by adding a ' ' every n bytes.
     #[arg(long, short, default_value_t = 2)]
     group: u8,
+
     /// File path.
     file_name: String,
 
@@ -22,6 +24,13 @@ pub struct Args {
     #[arg(long, short, default_value_t = false)]
     include: bool,
 
+    /// dump hex in plain text format
+    #[arg(long, short, default_value_t = false)]
+    plain: bool,
+
+    /// Limit of n bytes before stopping
+    #[arg(long, short, default_value_t = 0)]
+    limit: usize,
 }
 
 fn main() {
@@ -35,10 +44,12 @@ fn main() {
     }
 
     let file_content = file_content.unwrap();
-    let hex = Hex::new(file_content, args.characters, args.group);
+    let hex = Hex::new(file_content, args.characters, args.group, args.limit);
 
     let result = if args.include {
         hex.dump_c_array(file_name)
+    } else if args.plain {
+        hex.dump_plain_hex()
     } else {
         hex.dump_bytes()
     };

@@ -2,16 +2,21 @@ pub struct Hex {
     content: String,
     bytes: u8,
     group: u8,
+    limit: usize,
 }
 
 impl Hex {
-    pub fn new(content: String, bytes: u8, group: u8) -> Hex {
-        Hex { content, bytes, group }
+    pub fn new(content: String, bytes: u8, group: u8, limit: usize) -> Hex {
+        Hex { content, bytes, group, limit }
     }
 
     pub fn dump_bytes(&self) -> String {
         let mut bytes = 0;
-        let length = self.content.len();
+        let length = if self.limit != 0 {
+            self.limit
+        } else {
+            self.content.len()
+        };
         let content = &self.content;
         let trimmed_content = content.clone().replace("\n", ".");
 
@@ -41,6 +46,7 @@ impl Hex {
         let content = self.content.clone();
         let mut array = String::from(&array_name);
         array.push_str(" = {\n");
+
         let array_elems = content
             .chars()
             .map(|ch| {
@@ -48,9 +54,27 @@ impl Hex {
             })
             .collect::<Vec<String>>()
             .join(", ");
+
         array.push_str(&array_elems);
         array.push_str("\n}");
+
         array
+    }
+
+    pub fn dump_plain_hex(&self) -> String {
+        let content = self.content.chars();
+        let mut plain_hex = String::new();
+
+        for (idx, ch) in content.enumerate() {
+            if self.limit != 0 && idx == self.limit { break; }
+
+            if idx % self.bytes as usize == 0 { plain_hex.push('\n'); }
+
+            let ch = format!("{:x}", ch as usize);
+            plain_hex.push_str(&ch);
+        }
+
+        plain_hex
     }
 
     fn generate_hex(bytes: &str, group: usize) -> String {
