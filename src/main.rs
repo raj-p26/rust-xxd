@@ -8,10 +8,13 @@ use hex::Hex;
 /// Hexdump a file to stdout. If no file is listed, copy from stdin.
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-struct Args {
-    /// Numbers of characters.
+pub struct Args {
+    /// Show n bytes per line.
     #[arg(long, short, default_value_t = 16)]
     characters: u8,
+    /// Group bytes by adding a ' ' every n bytes.
+    #[arg(long, short, default_value_t = 2)]
+    group: u8,
     /// File path.
     file_name: String,
 }
@@ -26,7 +29,8 @@ fn main() {
     }
 
     let file_content = file_content.unwrap();
-    let hex = Hex::new(file_content, args.characters);
+    let hex = Hex::new(file_content, args.characters, args.group);
 
-    hex.dump_bytes();
+    let result = hex.dump_bytes();
+    println!("{result}");
 }
