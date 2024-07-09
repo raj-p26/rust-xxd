@@ -14,6 +14,7 @@ impl Hex {
         let length = self.content.len();
         let content = &self.content;
         let trimmed_content = content.clone().replace("\n", ".");
+
         #[allow(unused_assignments)]
         let mut peek = 0;
         let mut result = String::new();
@@ -34,6 +35,22 @@ impl Hex {
         }
 
         result
+    }
+
+    pub fn dump_c_array(&self, array_name: String) -> String {
+        let content = self.content.clone();
+        let mut array = String::from(&array_name);
+        array.push_str(" = {\n");
+        let array_elems = content
+            .chars()
+            .map(|ch| {
+                format!("{:#x}", ch as usize)
+            })
+            .collect::<Vec<String>>()
+            .join(", ");
+        array.push_str(&array_elems);
+        array.push_str("\n}");
+        array
     }
 
     fn generate_hex(bytes: &str, group: usize) -> String {
