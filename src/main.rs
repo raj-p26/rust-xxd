@@ -31,6 +31,14 @@ pub struct Args {
     /// Limit of n bytes before stopping
     #[arg(long, short, default_value_t = 0)]
     limit: usize,
+
+    /// Skip to offset n
+    #[arg(long, short, default_value_t = 0)]
+    skip: usize,
+
+    /// Dump binary instead of hexadecimal
+    #[arg(long, short, default_value_t = false)]
+    binary: bool,
 }
 
 fn main() {
@@ -44,7 +52,11 @@ fn main() {
     }
 
     let file_content = file_content.unwrap();
-    let hex = Hex::new(file_content, args.characters, args.group, args.limit);
+    let hex = Hex::new(
+        file_content, args.characters,
+        args.group, args.limit, args.skip,
+        args.binary,
+    );
 
     let result = if args.include {
         hex.dump_c_array(file_name)

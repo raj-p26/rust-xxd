@@ -3,15 +3,24 @@ pub struct Hex {
     bytes: u8,
     group: u8,
     limit: usize,
+    skip: usize,
+    binary: bool,
 }
 
 impl Hex {
-    pub fn new(content: String, bytes: u8, group: u8, limit: usize) -> Hex {
-        Hex { content, bytes, group, limit }
+    pub fn new(
+        content: String,
+        bytes: u8,
+        group: u8,
+        limit: usize,
+        skip: usize,
+        binary: bool,
+    ) -> Hex {
+        Hex { content, bytes, group, limit, skip, binary }
     }
 
     pub fn dump_bytes(&self) -> String {
-        let mut bytes = 0;
+        let mut bytes = self.skip;
         let length = if self.limit != 0 {
             self.limit
         } else {
@@ -29,10 +38,10 @@ impl Hex {
 
             bytes += self.bytes as usize;
             let (string, content) = if bytes >= length {(
-                Self::generate_hex(&content[peek..length], self.group as usize),
+                self.generate_bytes(&content[peek..length], self.group as usize),
                 &trimmed_content[peek..length]
             )} else {(
-                Self::generate_hex(&content[peek..bytes], self.group as usize),
+                self.generate_bytes(&content[peek..bytes], self.group as usize),
                 &trimmed_content[peek..bytes]
             )};
 
@@ -40,6 +49,28 @@ impl Hex {
         }
 
         result
+    }
+
+    fn generate_bytes(&self, content: &str, group: usize) -> String {
+        if self.binary {
+            Self::generate_bin(content)
+        } else {
+            Self::generate_hex(content, group)
+        }
+    }
+
+    fn generate_bin(content: &str) -> String {
+        let content: Vec<char> = content.chars().collect();
+        let len = content.len();
+        let mut string = String::new();
+
+        for idx in 0..len {
+            let ch = content.get(idx).unwrap_or(&'\0');
+
+            string.push_str(&format!("{:08b} ", *ch as u8));
+        }
+
+        return string;
     }
 
     pub fn dump_c_array(&self, array_name: String) -> String {
@@ -66,9 +97,9 @@ impl Hex {
         let mut plain_hex = String::new();
 
         for (idx, ch) in content.enumerate() {
-            if self.limit != 0 && idx == self.limit { break; }
+            if idx < self.skip { continue; }
 
-            if idx % self.bytes as usize == 0 { plain_hex.push('\n'); }
+            if self.limit != 0 && idx == self.limit { break; }
 
             let ch = format!("{:x}", ch as usize);
             plain_hex.push_str(&ch);
