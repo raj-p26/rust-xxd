@@ -27,7 +27,10 @@ impl Hex {
             self.content.len()
         };
         let content = &self.content;
-        let trimmed_content = content.clone().replace("\n", ".");
+        let trimmed_content: String = content
+            .clone()
+            .replace("\n", ".")
+            .into();
 
         #[allow(unused_assignments)]
         let mut peek = 0;
@@ -118,7 +121,9 @@ impl Hex {
 
             if idx % group == 0 { string.push(' '); }
 
-            string.push_str(&format!("{:02x}", *ch as u8));
+            let ch = format!("{:02x}", *ch as u8);
+
+            string.push_str(&ch);
         }
 
         return string;

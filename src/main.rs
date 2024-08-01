@@ -2,6 +2,7 @@ use clap::Parser;
 use std::fs;
 
 mod hex;
+mod tests;
 
 use hex::Hex;
 
