@@ -1,5 +1,4 @@
 use clap::Parser;
-use regex::Regex;
 use std::fs;
 
 mod hex;
@@ -50,10 +49,6 @@ pub struct Args {
 fn main() {
     let args = Args::parse();
     let file_content = fs::read_to_string(args.file_name.clone());
-    let regex = Regex::new(r"[\s.-]").expect("Error in regex");
-    let file_name = regex
-        .replace_all(&args.file_name, "_")
-        .to_string();
 
     if let Err(e) = file_content {
         eprintln!("{}", e.to_string());
@@ -69,9 +64,9 @@ fn main() {
 
     let result = if args.include {
         let file_name = if args.uppercase {
-            file_name.to_uppercase()
+            args.file_name.to_uppercase()
         } else {
-            file_name.to_lowercase()
+            args.file_name.to_lowercase()
         };
         hex.dump_c_array(file_name)
     } else if args.plain {

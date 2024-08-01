@@ -1,3 +1,5 @@
+use regex::Regex;
+
 pub struct Hex {
     content: String,
     bytes: u8,
@@ -79,23 +81,26 @@ impl Hex {
     }
 
     pub fn dump_c_array(&self, array_name: String) -> String {
+        let regex = Regex::new(r"[\s.-]").expect("regex error");
+        let array_name = regex.replace_all(&array_name, "_").to_string();
         let content = self.content.clone();
-        let mut array = String::from(&array_name);
-        array.push_str(" = {\n");
+        let mut array = String::new();
+        array.push_str(&format!("unsigned char {}[] = {{", array_name));
 
-        let array_elems = content
-            .chars()
-            .map(|ch| {
-                return if self.uppercase {
-                    format!("{:#X}", ch as usize)
-                } else {
-                    format!("{:#x}", ch as usize)
-                }
-            })
-            .collect::<Vec<String>>()
-            .join(", ");
+        for (idx, ch) in content.chars().enumerate() {
+            if idx as u8 % self.bytes == 0 {
+                array.push_str("\n\t");
+            }
 
-        array.push_str(&array_elems);
+            if self.uppercase {
+                array.push_str(&format!("{:#X}, ", ch as usize));
+            } else {
+                array.push_str(&format!("{:#x}, ", ch as usize));
+            }
+        }
+        array.pop();
+        array.pop();
+
         array.push_str("\n}");
 
         array
@@ -109,6 +114,9 @@ impl Hex {
             if idx < self.skip { continue; }
 
             if self.limit != 0 && idx == self.limit { break; }
+            if idx != 0 && (idx as u8) % self.bytes == 0 {
+                plain_hex.push('\n');
+            }
 
             let ch = if self.uppercase {
                 format!("{:X}", ch as usize)
