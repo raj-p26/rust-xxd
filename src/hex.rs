@@ -5,6 +5,7 @@ pub struct Hex {
     limit: usize,
     skip: usize,
     binary: bool,
+    uppercase: bool,
 }
 
 impl Hex {
@@ -15,8 +16,9 @@ impl Hex {
         limit: usize,
         skip: usize,
         binary: bool,
+        uppercase: bool,
     ) -> Hex {
-        Hex { content, bytes, group, limit, skip, binary }
+        Hex { content, bytes, group, limit, skip, binary, uppercase }
     }
 
     pub fn dump_bytes(&self) -> String {
@@ -58,7 +60,7 @@ impl Hex {
         if self.binary {
             Self::generate_bin(content)
         } else {
-            Self::generate_hex(content, group)
+            self.generate_hex(content, group)
         }
     }
 
@@ -84,7 +86,11 @@ impl Hex {
         let array_elems = content
             .chars()
             .map(|ch| {
-                format!("{:#x}", ch as usize)
+                return if self.uppercase {
+                    format!("{:#X}", ch as usize)
+                } else {
+                    format!("{:#x}", ch as usize)
+                }
             })
             .collect::<Vec<String>>()
             .join(", ");
@@ -104,14 +110,18 @@ impl Hex {
 
             if self.limit != 0 && idx == self.limit { break; }
 
-            let ch = format!("{:x}", ch as usize);
+            let ch = if self.uppercase {
+                format!("{:X}", ch as usize)
+            } else {
+                format!("{:x}", ch as usize)
+            };
             plain_hex.push_str(&ch);
         }
 
         plain_hex
     }
 
-    fn generate_hex(bytes: &str, group: usize) -> String {
+    fn generate_hex(&self, bytes: &str, group: usize) -> String {
         let len = bytes.len();
         let bytes = bytes.chars().collect::<Vec<char>>();
         let mut string = String::new();
@@ -121,7 +131,11 @@ impl Hex {
 
             if idx % group == 0 { string.push(' '); }
 
-            let ch = format!("{:02x}", *ch as u8);
+            let ch = if self.uppercase {
+                format!("{:02X}", *ch as u8)
+            } else {
+                format!("{:02x}", *ch as u8)
+            };
 
             string.push_str(&ch);
         }

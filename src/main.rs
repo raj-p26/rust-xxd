@@ -1,4 +1,5 @@
 use clap::Parser;
+use regex::Regex;
 use std::fs;
 
 mod hex;
@@ -40,12 +41,19 @@ pub struct Args {
     /// Dump binary instead of hexadecimal
     #[arg(long, short, default_value_t = false)]
     binary: bool,
+
+    /// Dump hex in uppercase format
+    #[arg(long, short, default_value_t = false)]
+    uppercase: bool,
 }
 
 fn main() {
     let args = Args::parse();
     let file_content = fs::read_to_string(args.file_name.clone());
-    let file_name = args.file_name.replace(".", "_").to_lowercase();
+    let regex = Regex::new(r"[\s.-]").expect("Error in regex");
+    let file_name = regex
+        .replace_all(&args.file_name, "_")
+        .to_string();
 
     if let Err(e) = file_content {
         eprintln!("{}", e.to_string());
@@ -56,15 +64,21 @@ fn main() {
     let hex = Hex::new(
         file_content, args.characters,
         args.group, args.limit, args.skip,
-        args.binary,
+        args.binary, args.uppercase
     );
 
     let result = if args.include {
+        let file_name = if args.uppercase {
+            file_name.to_uppercase()
+        } else {
+            file_name.to_lowercase()
+        };
         hex.dump_c_array(file_name)
     } else if args.plain {
         hex.dump_plain_hex()
     } else {
         hex.dump_bytes()
     };
+
     println!("{result}");
 }
