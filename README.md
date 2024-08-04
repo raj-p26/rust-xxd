@@ -6,27 +6,27 @@ To get started visit [rustup](https://rustup.rs).
 
 Make sure rust is installed in your local machine by checking:
 ```shell
-rustc --version
+$ rustc --version
 ```
 
 After making sure that rust is succesfully installed in your local machine, clone this repo:
 ```shell
-git clone https://github.com/raj-p26/rust-xxd
+$ git clone https://github.com/raj-p26/rust-xxd
 ```
 
 `cd` into the rust-xxd directory:
 ```shell
-cd rust-xxd/
+$ cd rust-xxd/
 ```
 
 run the project using `cargo`:
 ```shell
-cargo run
+$ cargo run
 ```
 
 ----------------
 
-Commamd flags:
+Command flags:
 - `file_name`: The file you want to hex dump.
 - `--binary | -b`: Pretty print binary instead of hexadecimal.
 - `--characters | -c`: Characters/bytes you want to hex dump in one line. Default is 16.
@@ -38,7 +38,6 @@ Commamd flags:
 - `--skip | -s`: Skip to offset n. Default is 0(No offset).
 - `--uppercase | -u`: Dump hex in uppercase format.
 
-## TODO
+## License
 
-- Insert document comments
-- If possible, Doctest
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.

@@ -1,4 +1,6 @@
 #![cfg(test)]
+//! # tests module
+//! This is the module where unit tests are created for hex dumper.
 
 use crate::hex::Hex;
 

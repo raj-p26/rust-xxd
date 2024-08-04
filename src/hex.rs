@@ -1,21 +1,69 @@
+//! # The hex module.
+//! This module contains struct to hex dump content with custom args.
+
+extern crate colored;
+extern crate regex;
+
 use std::borrow::Cow;
 
-use regex::Regex;
 use colored::*;
+use regex::Regex;
 
+/// Hex struct.
+/// This struct has fields that are flags of the command.
+/// It manipulates the content based on flags.
+///
+/// # Example
+/// ```rust
+/// let hex = Hex {
+///     content: "This is example content.".to_string(),
+///     bytes: 16,
+///     group: 2,
+///     limit: 0,
+///     skip: 0,
+///     binary: false,
+///     uppercase: false,
+///     decimal: false,
+/// };
+/// ```
 #[derive(Clone)]
 pub struct Hex {
+    /// This is the field where the actual content that you want to dump, is stored.
     pub content: String,
+    /// This is the field that lets you figure out how many characters should be dumped in single
+    /// line.
     bytes: u8,
+    /// This is the field that is used to set group size of dumped hex/binary.
     group: u8,
+    /// This is the field that is used to set limit of content reading. If the limit is less than
+    /// content length, it will only print until limit is reached. If the limit is greater than
+    /// content length, it will print until the end of file.
     limit: usize,
+    /// This field is used to skip the file content from the beginning. If this field is set to
+    /// value more that content length, it won't dump any content at all.
     skip: usize,
+    /// This field lets you dump binary instead of hex. When the field is true, the bytes per line
+    /// will automatically be set to 6.
     binary: bool,
+    /// When this field is set to `true`, it will dump hex in uppercase hex letters. By default it
+    /// dumps content in lowercase letters.
     uppercase: bool,
+    /// When this field is set to `true`, it will dump the offset in decimals. By default it dumps
+    /// content in hex.
     decimal: bool,
 }
 
 impl Hex {
+    /// Creates a new Hex Dumper with given flags.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let hex_dumper = Hex::new(
+    /// String::from("some String content"),
+    /// 16, 2, 0, 0, false, false, false
+    /// );
+    /// ```
     pub fn new(
         content: String,
         bytes: u8,
@@ -29,6 +77,13 @@ impl Hex {
         Hex { content, bytes, group, limit, skip, binary, uppercase, decimal }
     }
 
+    /// returns `String` that contains content in formatted manner.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// println!("{}", hex.dump_bytes());
+    /// ```
     pub fn dump_bytes(&mut self) -> String {
         let mut bytes = self.skip;
         if self.binary {
@@ -73,6 +128,9 @@ impl Hex {
         result
     }
 
+    /// This is helper function that helps building string based on flags.
+    /// If the binary flag is set to `true`, it will return `String` containing binary
+    /// representation of content. Otherwise hexadecimal representation.
     fn generate_bytes(&self, content: &str, group: usize) -> String {
         if self.binary {
             Self::generate_bin(content)
@@ -81,6 +139,8 @@ impl Hex {
         }
     }
 
+    /// This is helper function that helps generating binary. It takes content as argument and
+    /// builds string consisting binary of each character in that string.
     fn generate_bin(content: &str) -> String {
         let content: Vec<char> = content.chars().collect();
         let len = content.len();
@@ -95,6 +155,15 @@ impl Hex {
         return string;
     }
 
+    /// This is the function that dumps C Array. It takes name of the array, builds a string with
+    /// file content characters in hexadecimal format and returns it.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let array = hex.dump_c_array("foo-bar");
+    /// println!("{}", array);
+    /// ```
     pub fn dump_c_array(&self, array_name: String) -> String {
         let regex = Regex::new(r"[\s.-]").expect("regex error");
         let array_name = regex.replace_all(&array_name, "_").to_string();
@@ -121,6 +190,7 @@ impl Hex {
         array
     }
 
+    /// This is the function that helps printing plain hex instead of formatted output.
     pub fn dump_plain_hex(&self) -> String {
         let content = self.content.chars();
         let mut plain_hex = String::new();
@@ -145,6 +215,8 @@ impl Hex {
         plain_hex
     }
 
+    /// This is the helper function that is used to build hexadecimal representation of content
+    /// based on content.
     fn generate_hex(&self, bytes: &str, group: usize) -> String {
         let len = bytes.len();
         let bytes = bytes.chars().collect::<Vec<char>>();
