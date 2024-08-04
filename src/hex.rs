@@ -3,8 +3,9 @@ use std::borrow::Cow;
 use regex::Regex;
 use colored::*;
 
+#[derive(Clone)]
 pub struct Hex {
-    content: String,
+    pub content: String,
     bytes: u8,
     group: u8,
     limit: usize,
@@ -67,6 +68,7 @@ impl Hex {
 
             result.push_str(&format!("{}:{} -> {}\n", offset, string.green(), content.green()));
         }
+        result.pop();
 
         result
     }
@@ -138,6 +140,7 @@ impl Hex {
             };
             plain_hex.push_str(&ch);
         }
+        plain_hex.pop();
 
         plain_hex
     }
@@ -164,3 +167,4 @@ impl Hex {
         return string;
     }
 }
+
