@@ -37,13 +37,17 @@ pub struct Args {
     #[arg(long, short, default_value_t = 0)]
     skip: usize,
 
-    /// Dump binary instead of hexadecimal
+    /// Dump binary instead of hexadecimal. Incompatible with (-p, -i)
     #[arg(long, short, default_value_t = false)]
     binary: bool,
 
     /// Dump hex in uppercase format
     #[arg(long, short, default_value_t = false)]
     uppercase: bool,
+
+    /// Print offset in decimal. default is Hex
+    #[arg(long, short, default_value_t = false)]
+    decimal: bool,
 }
 
 fn main() {
@@ -56,19 +60,15 @@ fn main() {
     }
 
     let file_content = file_content.unwrap();
-    let hex = Hex::new(
+    let mut hex = Hex::new(
         file_content, args.characters,
         args.group, args.limit, args.skip,
-        args.binary, args.uppercase
+        args.binary, args.uppercase,
+        args.decimal,
     );
 
     let result = if args.include {
-        let file_name = if args.uppercase {
-            args.file_name.to_uppercase()
-        } else {
-            args.file_name.to_lowercase()
-        };
-        hex.dump_c_array(file_name)
+        hex.dump_c_array(args.file_name)
     } else if args.plain {
         hex.dump_plain_hex()
     } else {

@@ -12,15 +12,16 @@ fn test_hex_default() {
     let skip = 0;
     let binary = false;
     let uppercase = false;
-    let hex_dumper = Hex::new(
+    let decimal = false;
+    let mut hex_dumper = Hex::new(
         input, bytes, group,
         limit, skip, binary,
-        uppercase
+        uppercase, decimal
     );
 
-    let expected = r#"00000000: 5468 6973 2069 7320 736f 6d65 2073 7472 -> This is some str
-00000010: 696e 670a -> ing.
-"#.to_string();
+    let expected = "00000000:\u{1b}[32m 5468 6973 2069 7320 736f 6d65 2073 7472\u{1b}[0m -> \u{1b}[32mThis is some str\u{1b}[0m
+00000010:\u{1b}[32m 696e 670a\u{1b}[0m -> \u{1b}[32ming.\u{1b}[0m
+".to_string();
     let actual = hex_dumper.dump_bytes();
 
     assert_eq!(expected, actual, "actual did not match expected");
@@ -36,15 +37,16 @@ fn test_hex_chars() {
     let skip = 0;
     let binary = false;
     let uppercase = false;
-    let hex_dumper = Hex::new(
+    let decimal = false;
+    let mut hex_dumper = Hex::new(
         input, bytes, group,
         limit, skip, binary,
-        uppercase
+        uppercase, decimal
     );
 
-    let expected = r#"00000000: 5468 6973 2069 7320 736f -> This is so
-0000000a: 6d65 2073 7472 696e 670a -> me string.
-"#.to_string();
+    let expected = "00000000:\u{1b}[32m 5468 6973 2069 7320 736f\u{1b}[0m -> \u{1b}[32mThis is so\u{1b}[0m
+0000000a:\u{1b}[32m 6d65 2073 7472 696e 670a\u{1b}[0m -> \u{1b}[32mme string.\u{1b}[0m
+".to_string();
     let actual = hex_dumper.dump_bytes();
 
     assert_eq!(expected, actual, "actal did not match expected");
@@ -60,14 +62,15 @@ fn test_hex_char_group() {
     let skip = 0;
     let binary = false;
     let uppercase = false;
-    let hex_dumper = Hex::new(
+    let decimal = false;
+    let mut hex_dumper = Hex::new(
         input, bytes, group,
         limit, skip, binary,
-        uppercase
+        uppercase, decimal
     );
-    let expected = r#"00000000: 54686973 20697320 736f6d65 20737472 -> This is some str
-00000010: 696e670a -> ing.
-"#.to_string();
+    let expected = "00000000:\u{1b}[32m 54686973 20697320 736f6d65 20737472\u{1b}[0m -> \u{1b}[32mThis is some str\u{1b}[0m
+00000010:\u{1b}[32m 696e670a\u{1b}[0m -> \u{1b}[32ming.\u{1b}[0m
+".to_string();
 
     let actual = hex_dumper.dump_bytes();
 
@@ -84,13 +87,14 @@ fn test_hex_limit() {
     let skip = 0;
     let binary = false;
     let uppercase = false;
-    let hex_dumper = Hex::new(
+    let decimal = false;
+    let mut hex_dumper = Hex::new(
         input, bytes, group,
         limit, skip, binary,
-        uppercase
+        uppercase, decimal
     );
 
-    let expected = "00000000: 5468 6973 2069 7320 736f -> This is so\n";
+    let expected = "00000000:\u{1b}[32m 5468 6973 2069 7320 736f\u{1b}[0m -> \u{1b}[32mThis is so\u{1b}[0m\n";
     let actual = hex_dumper.dump_bytes();
 
     assert_eq!(expected, actual);
@@ -106,13 +110,14 @@ fn test_hex_skip() {
     let skip = 10;
     let binary = false;
     let uppercase = false;
-    let hex_dumper = Hex::new(
+    let decimal = false;
+    let mut hex_dumper = Hex::new(
         input, bytes, group,
         limit, skip, binary,
-        uppercase
+        uppercase, decimal
     );
 
-    let expected = "0000000a: 6d65 2073 7472 696e 670a -> me string.\n";
+    let expected = "0000000a:\u{1b}[32m 6d65 2073 7472 696e 670a\u{1b}[0m -> \u{1b}[32mme string.\u{1b}[0m\n";
 
     let actual = hex_dumper.dump_bytes();
 
@@ -129,15 +134,19 @@ fn test_binary() {
     let skip = 0;
     let binary = true;
     let uppercase = false;
-    let hex_dumper = Hex::new(
+    let decimal = false;
+    let mut hex_dumper = Hex::new(
         input, bytes, group,
         limit, skip, binary,
-        uppercase
+        uppercase, decimal
     );
 
-    let expected = r#"00000000:01010100 01101000 01101001 01110011 00100000 01101001 01110011 00100000 01110011 01101111 01101101 01100101 00100000 01110011 01110100 01110010  -> This is some str
-00000010:01101001 01101110 01100111 00001010  -> ing.
-"#;
+    let expected = "00000000:\u{1b}[32m 01010100 01101000 01101001 01110011 00100000 01101001\u{1b}[0m -> \u{1b}[32mThis i\u{1b}[0m
+00000006:\u{1b}[32m 01110011 00100000 01110011 01101111 01101101 01100101\u{1b}[0m -> \u{1b}[32ms some\u{1b}[0m
+0000000c:\u{1b}[32m 00100000 01110011 01110100 01110010 01101001 01101110\u{1b}[0m -> \u{1b}[32m strin\u{1b}[0m
+00000012:\u{1b}[32m 01100111 00001010\u{1b}[0m -> \u{1b}[32mg.\u{1b}[0m
+";
+
 
     let actual = hex_dumper.dump_bytes();
 
@@ -154,15 +163,16 @@ fn test_uppercase() {
     let skip = 0;
     let binary = false;
     let uppercase = true;
-    let hex_dumper = Hex::new(
+    let decimal = false;
+    let mut hex_dumper = Hex::new(
         input, bytes, group,
         limit, skip, binary,
-        uppercase
+        uppercase, decimal
     );
 
-    let expected = r#"00000000: 5468 6973 2069 7320 736F 6D65 2073 7472 -> This is some str
-00000010: 696E 670A -> ing.
-"#.to_string();
+    let expected = "00000000:\u{1b}[32m 5468 6973 2069 7320 736F 6D65 2073 7472\u{1b}[0m -> \u{1b}[32mThis is some str\u{1b}[0m
+00000010:\u{1b}[32m 696E 670A\u{1b}[0m -> \u{1b}[32ming.\u{1b}[0m
+".to_string();
     let actual = hex_dumper.dump_bytes();
 
     assert_eq!(expected, actual, "actual did not match expected");
@@ -178,10 +188,11 @@ fn test_c_array_dump() {
     let skip = 0;
     let binary = false;
     let uppercase = false;
+    let decimal = false;
     let hex_dumper = Hex::new(
         input, bytes, group,
         limit, skip, binary,
-        uppercase
+        uppercase, decimal
     );
     let array_name = "some-file.txt".to_string();
 
@@ -204,10 +215,11 @@ fn test_plain_hex_dump() {
     let skip = 0;
     let binary = false;
     let uppercase = false;
+    let decimal = false;
     let hex_dumper = Hex::new(
         input, bytes, group,
         limit, skip, binary,
-        uppercase
+        uppercase, decimal
     );
 
     let expected = "5468697320697320736f6d6520737472

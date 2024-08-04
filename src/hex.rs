@@ -1,4 +1,7 @@
+use std::borrow::Cow;
+
 use regex::Regex;
+use colored::*;
 
 pub struct Hex {
     content: String,
@@ -8,6 +11,7 @@ pub struct Hex {
     skip: usize,
     binary: bool,
     uppercase: bool,
+    decimal: bool,
 }
 
 impl Hex {
@@ -19,19 +23,23 @@ impl Hex {
         skip: usize,
         binary: bool,
         uppercase: bool,
+        decimal: bool,
     ) -> Hex {
-        Hex { content, bytes, group, limit, skip, binary, uppercase }
+        Hex { content, bytes, group, limit, skip, binary, uppercase, decimal }
     }
 
-    pub fn dump_bytes(&self) -> String {
+    pub fn dump_bytes(&mut self) -> String {
         let mut bytes = self.skip;
+        if self.binary {
+            self.bytes = 6;
+        }
         let length = if self.limit != 0 {
             self.limit
         } else {
             self.content.len()
         };
         let content = &self.content;
-        let trimmed_content: String = content
+        let trimmed_content: Cow<str> = content
             .clone()
             .replace("\n", ".")
             .into();
@@ -46,13 +54,18 @@ impl Hex {
             bytes += self.bytes as usize;
             let (string, content) = if bytes >= length {(
                 self.generate_bytes(&content[peek..length], self.group as usize),
-                &trimmed_content[peek..length]
+                format!("{}", &trimmed_content[peek..length])
             )} else {(
                 self.generate_bytes(&content[peek..bytes], self.group as usize),
-                &trimmed_content[peek..bytes]
+                format!("{}", &trimmed_content[peek..bytes])
             )};
+            let offset = if self.decimal {
+                format!("{:08}", peek)
+            } else {
+                format!("{:08x}", peek)
+            };
 
-            result.push_str(&format!("{:08x}:{} -> {}\n", peek, string, content));
+            result.push_str(&format!("{}:{} -> {}\n", offset, string.green(), content.green()));
         }
 
         result
@@ -74,7 +87,7 @@ impl Hex {
         for idx in 0..len {
             let ch = content.get(idx).unwrap_or(&'\0');
 
-            string.push_str(&format!("{:08b} ", *ch as u8));
+            string.push_str(&format!(" {:08b}", *ch as u8));
         }
 
         return string;
