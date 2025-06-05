@@ -4,8 +4,6 @@
 extern crate colored;
 extern crate regex;
 
-use std::borrow::Cow;
-
 use colored::*;
 use regex::Regex;
 
@@ -16,7 +14,7 @@ use regex::Regex;
 /// # Example
 /// ```rust
 /// let hex = Hex {
-///     content: "This is example content.".to_string(),
+///     content: "This is example content.".bytes().collect(),
 ///     bytes: 16,
 ///     group: 2,
 ///     limit: 0,
@@ -29,10 +27,10 @@ use regex::Regex;
 #[derive(Clone)]
 pub struct Hex {
     /// This is the field where the actual content that you want to dump, is stored.
-    pub content: String,
+    pub content: Vec<u8>,
     /// This is the field that lets you figure out how many characters should be dumped in single
     /// line.
-    bytes: u8,
+    bytes: usize,
     /// This is the field that is used to set group size of dumped hex/binary.
     group: u8,
     /// This is the field that is used to set limit of content reading. If the limit is less than
@@ -60,13 +58,13 @@ impl Hex {
     ///
     /// ```rust
     /// let hex_dumper = Hex::new(
-    /// String::from("some String content"),
+    /// "some String content".bytes().collect(),
     /// 16, 2, 0, 0, false, false, false
     /// );
     /// ```
     pub fn new(
-        content: String,
-        bytes: u8,
+        content: Vec<u8>,
+        bytes: usize,
         group: u8,
         limit: usize,
         skip: usize,
@@ -95,25 +93,24 @@ impl Hex {
             self.content.len()
         };
         let content = &self.content;
-        let trimmed_content: Cow<str> = content
-            .clone()
-            .replace("\n", ".")
-            .into();
+        // let trimmed_content: Cow<str> = content
+        //     .clone()
+        //     .replace("\n", ".")
+        //     .into();
 
-        #[allow(unused_assignments)]
-        let mut peek = 0;
         let mut result = String::new();
 
         while bytes < length {
-            peek = bytes;
+            let peek = bytes;
 
             bytes += self.bytes as usize;
             let (string, content) = if bytes >= length {(
                 self.generate_bytes(&content[peek..length], self.group as usize),
-                format!("{}", &trimmed_content[peek..length])
-            )} else {(
+                format!("{}", self.get_escaped_content(&content[peek..length]))
+            )} else {
+                (
                 self.generate_bytes(&content[peek..bytes], self.group as usize),
-                format!("{}", &trimmed_content[peek..bytes])
+                format!("{}", self.get_escaped_content(&content[peek..bytes]))
             )};
             let offset = if self.decimal {
                 format!("{:08}", peek)
@@ -131,7 +128,7 @@ impl Hex {
     /// This is helper function that helps building string based on flags.
     /// If the binary flag is set to `true`, it will return `String` containing binary
     /// representation of content. Otherwise hexadecimal representation.
-    fn generate_bytes(&self, content: &str, group: usize) -> String {
+    fn generate_bytes(&self, content: &[u8], group: usize) -> String {
         if self.binary {
             Self::generate_bin(content)
         } else {
@@ -141,8 +138,10 @@ impl Hex {
 
     /// This is helper function that helps generating binary. It takes content as argument and
     /// builds string consisting binary of each character in that string.
-    fn generate_bin(content: &str) -> String {
-        let content: Vec<char> = content.chars().collect();
+    fn generate_bin(content: &[u8]) -> String {
+        let content: Vec<char> = content.iter().map(|i| {
+            *i as char
+        }).collect();
         let len = content.len();
         let mut string = String::new();
 
@@ -171,8 +170,8 @@ impl Hex {
         let mut array = String::new();
         array.push_str(&format!("unsigned char {}[] = {{", array_name));
 
-        for (idx, ch) in content.chars().enumerate() {
-            if idx as u8 % self.bytes == 0 {
+        for (idx, ch) in content.into_iter().enumerate() {
+            if idx % self.bytes == 0 {
                 array.push_str("\n\t");
             }
 
@@ -192,21 +191,21 @@ impl Hex {
 
     /// This is the function that helps printing plain hex instead of formatted output.
     pub fn dump_plain_hex(&self) -> String {
-        let content = self.content.chars();
+        let content = self.content.iter();
         let mut plain_hex = String::new();
 
         for (idx, ch) in content.enumerate() {
             if idx < self.skip { continue; }
 
             if self.limit != 0 && idx == self.limit { break; }
-            if idx != 0 && (idx as u8) % self.bytes == 0 {
+            if idx != 0 && idx % self.bytes == 0 {
                 plain_hex.push('\n');
             }
 
             let ch = if self.uppercase {
-                format!("{:X}", ch as usize)
+                format!("{:X}", ch)
             } else {
-                format!("{:x}", ch as usize)
+                format!("{:x}", ch)
             };
             plain_hex.push_str(&ch);
         }
@@ -217,26 +216,43 @@ impl Hex {
 
     /// This is the helper function that is used to build hexadecimal representation of content
     /// based on content.
-    fn generate_hex(&self, bytes: &str, group: usize) -> String {
+    fn generate_hex(&self, bytes: &[u8], group: usize) -> String {
         let len = bytes.len();
-        let bytes = bytes.chars().collect::<Vec<char>>();
         let mut string = String::new();
 
         for idx in 0..len {
-            let ch = bytes.get(idx).unwrap_or(&'\0');
+            let ch = bytes.get(idx).unwrap_or(&0);
 
             if idx % group == 0 { string.push(' '); }
 
             let ch = if self.uppercase {
-                format!("{:02X}", *ch as u8)
+                format!("{:02X}", ch)
             } else {
-                format!("{:02x}", *ch as u8)
+                format!("{:02x}", ch)
             };
 
             string.push_str(&ch);
         }
 
         return string;
+    }
+
+    fn get_escaped_content(&self, bytes: &[u8]) -> String {
+        let bytes: Vec<String> = bytes.iter().map(|i| {
+            match *i {
+                ch if (
+                    ch.is_ascii_alphanumeric()
+                    || ch.is_ascii_punctuation()
+                    || ch.is_ascii_whitespace()
+                )
+                    && ch != 10
+                    => (ch as char).to_string(),
+                10
+                | _ => ".".to_string(),
+            }
+        }).collect();
+
+        bytes.into_iter().collect()
     }
 }
 

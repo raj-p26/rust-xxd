@@ -19,7 +19,7 @@ pub struct Args {
 
     /// Show n bytes per line.
     #[arg(long, short, default_value_t = 16)]
-    characters: u8,
+    characters: usize,
 
     /// Print offset in decimal. default is Hex
     #[arg(long, short, default_value_t = false)]
@@ -56,15 +56,15 @@ pub struct Args {
 
 fn main() {
     let args = Args::parse();
-    let file_content = fs::read_to_string(args.file_name.clone())
-        .unwrap_or("".to_string());
+    let file_content = fs::read(args.file_name.clone())
+        .unwrap_or(Vec::new());
     if args.file_name.trim() != "" && !Path::new(&args.file_name).exists() {
         eprintln!("Sorry, provided file does not exist");
         std::process::exit(65);
     }
 
     let mut hex = Hex::new(
-        file_content.clone(), args.characters,
+        file_content, args.characters,
         args.group, args.limit, args.skip,
         args.binary, args.uppercase,
         args.decimal,
@@ -97,7 +97,7 @@ fn run_prompt(mut hex: Hex, plain: bool) {
 
         if status == 0 { std::process::exit(0); }
 
-        hex.content = input.clone();
+        hex.content = input.bytes().collect();
 
         let result = if plain {
             hex.dump_plain_hex()
